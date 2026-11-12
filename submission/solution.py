@@ -544,6 +544,9 @@ class SnapIndex:
         for b in self.blocks:
             self.blocks_by_url[b.url].append(b)
         self.doc_sets = [set(d) for d in docs]
+        self.raw_vocab = set()
+        for b in self.blocks:
+            self.raw_vocab.update(re.findall(r"[a-z]+", (b.text + " " + b.heading + " " + b.title).lower()))
         self.url_toks: dict = {}
         self.vocab = set(self.bm25.post)
         self.row_vocab = set()
@@ -979,6 +982,13 @@ class TemporalKnowledge:
         hits = self._search(q, snap, k=6)
         if hits:
             text, b = self._compose(q, hits, snap=snap)
+        # the question uses words the website never mentions ("weather on Mars") and the answer doesn't
+        # contain them either -> the site doesn't cover it; don't guess
+        raw_q = {w for w in re.findall(r"[a-z]+", ql) if len(w) > 2 and w not in STOP and stem(w) not in GENERIC}
+        unknown = [w for w in raw_q if w not in snap.raw_vocab]
+        if unknown and not (set(unknown) & set(re.findall(r"[a-z]+", text.lower()))):
+            return Answer(text=f"I don't know - Dupaco's website doesn't cover that; {CONTACT_US}.",
+                          confident=False)
             bt = set(tokens(text))
             if sum(idf.get(w, 1.0) for w in want if w in bt) / tot >= 0.6:
                 return Answer(text=text, sources=[Source(url=b.url, snapshot_id=snap.snapshot_id)], confident=True)
@@ -1308,6 +1318,13 @@ class TemporalKnowledge:
             return Answer(text=f"I don't know - I couldn't find that on Dupaco's website; {CONTACT_US}.",
                           confident=False)
         text, b = self._compose(q, hits, snap=snap)
+        # the question uses words the website never mentions ("weather on Mars") and the answer doesn't
+        # contain them either -> the site doesn't cover it; don't guess
+        raw_q = {w for w in re.findall(r"[a-z]+", ql) if len(w) > 2 and w not in STOP and stem(w) not in GENERIC}
+        unknown = [w for w in raw_q if w not in snap.raw_vocab]
+        if unknown and not (set(unknown) & set(re.findall(r"[a-z]+", text.lower()))):
+            return Answer(text=f"I don't know - Dupaco's website doesn't cover that; {CONTACT_US}.",
+                          confident=False)
         if re.search(r"^\s*how (can|do|should) i\b", ql) and not re.search(r"\d{3}-\d{3}-\d{4}", text):
             text += " You can also call Dupaco at 800-373-7600 or use Shine Online & Mobile Banking."
         prefix = f"As of {snap.taken_on}: " if as_of else ""

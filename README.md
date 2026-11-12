@@ -26,7 +26,7 @@ Copy the kit's `snapshots_zip/` folder into the repo root, then:
 # official scorer (unpacks the zips into snapshots/ on first run)
 python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl
 
-# behaviour tests (23 tests: stale traps, tiers, as_of, refusals, consistency, speed, conflicts)
+# behaviour tests (39 tests: stale traps, tiers, as_of, refusals, fees, hours, links, change history, consistency, speed, conflicts)
 python -m unittest discover -s tests -v
 
 # ask your own questions
