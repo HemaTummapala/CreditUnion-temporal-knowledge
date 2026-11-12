@@ -1,0 +1,13 @@
+# --- supplied website data: NOT redistributed (place the kit's snapshots_zip/ here to run) ---
+snapshots_zip/
+snapshots/0*/
+# --- local files ---
+results/
+results_submission.log
+*.pdf
+KIT_README.md
+__pycache__/
+*.pyc
+.DS_Store
+.env
+
